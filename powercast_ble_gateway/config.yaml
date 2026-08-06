@@ -1,5 +1,5 @@
 name: "Powercast BLE Gateway"
-version: "0.3.4"
+version: "0.3.5"
 slug: "powercast_ble_gateway"
 description: "BLE scanner and adoption registry for direct Home Assistant deployments."
 url: "https://github.com/hshober-source/PowercastHA"
@@ -35,6 +35,7 @@ options:
     - "BLET"
     - "PCBLE"
     - "STBLE"
+    - "W7RF"
   start_scanner_on_boot: true
 schema:
   gateway_mac: "str?"
