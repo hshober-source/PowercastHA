@@ -1,5 +1,5 @@
 name: "Powercast BLE Gateway"
-version: "0.3.2"
+version: "0.3.3"
 slug: "powercast_ble_gateway"
 description: "BLE scanner and adoption registry for direct Home Assistant deployments."
 url: "https://github.com/hshober-source/PowercastHA"

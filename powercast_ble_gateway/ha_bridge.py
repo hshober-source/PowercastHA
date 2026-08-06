@@ -156,8 +156,10 @@ class HomeAssistantBridge:
     @staticmethod
     def _unit_for(key: str, registry: dict[str, Any]) -> str | None:
         for item in registry.get("characteristics") or []:
-            if str(item.get("characteristic_key") or "") == key: return item.get("unit")
-        return {"temperature_f": "degF", "temperature_c": "degC", "humidity_percent": "%", "rssi": "dBm"}.get(key)
+            if str(item.get("characteristic_key") or "") == key:
+                unit = item.get("unit")
+                return {"degF": "\u00b0F", "degC": "\u00b0C"}.get(unit, unit)
+        return {"temperature_f": "\u00b0F", "temperature_c": "\u00b0C", "humidity_percent": "%", "rssi": "dBm"}.get(key)
 
     def _publish_discovery(self, mac: str, tag: dict[str, Any], row: dict[str, Any], fields: dict[str, Any]) -> None:
         if self.client is None: return
