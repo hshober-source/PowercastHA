@@ -143,12 +143,20 @@ class HomeAssistantBridge:
 
     def _measurements(self, row: dict[str, Any], tag: dict[str, Any]) -> dict[str, Any]:
         output: dict[str, Any] = {}
+        registry = self._decoder_registry().get(str(tag.get("sensor_type") or "").upper(), {})
+        configured_keys = {
+            str(item.get("characteristic_key") or "")
+            for item in registry.get("characteristics") or []
+            if str(item.get("characteristic_key") or "")
+        }
         raw = self._decoded_object(row).get("characteristics")
         if isinstance(raw, dict):
             for key, value in raw.items():
                 value = value.get("value") if isinstance(value, dict) else value
                 if isinstance(value, (int, float, bool)): output[str(key)] = value
         for key in ("temperature_f", "temperature_c", "humidity_percent"):
+            if configured_keys and key not in configured_keys:
+                continue
             if isinstance(row.get(key), (int, float)): output.setdefault(key, round(row[key], 2))
         if not output and str(tag.get("sensor_type") or "").upper() == "0002": output["heartbeat"] = True
         return output
@@ -168,6 +176,9 @@ class HomeAssistantBridge:
         state_topic, device_id, friendly = f"{state_base}/{mac}/state", f"powercast_ble_{mac.lower()}", str(tag.get("display_name") or mac)
         registry = self._decoder_registry().get(str(row.get("custom_device_id") or tag.get("sensor_type") or "").upper(), {})
         device = {"identifiers": [device_id], "name": friendly, "manufacturer": "Powercast", "model": str(registry.get("display_name") or row.get("sensor_type") or "BLE tag"), "via_device": str(options.get("gateway_mac") or "powercast_ble_gateway")}
+        # Remove retained entities left over from an earlier registry definition.
+        for key in {"temperature_f", "temperature_c", "humidity_percent"} - set(fields):
+            self.client.publish(f"{prefix}/sensor/{device_id}/{slug(key)}/config", "", qos=1, retain=True)
         for key, value in {**fields, "rssi": 0}.items():
             entity_key = f"{mac}_{slug(key)}"
             if entity_key in self._published_entities: continue
