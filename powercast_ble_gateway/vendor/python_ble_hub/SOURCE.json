@@ -1,0 +1,10 @@
+{
+  "canonical_source": "python-ble-hub",
+  "files": {
+    "ble_mqtt_hub.py": "dcdfddba7b38bb69bff12b2ec0aa77972b7513ffce4b48049a22029ea8b1fea7",
+    "requirements.txt": "5427f6693189ea1c497af5126d96ccb28a1f19b0cad1e2b7b53d88fae4dd96bd",
+    "sensor_types.json": "7dc8c255302a4d1e9c09a0be3e2de6dbd1106b1b533b883fee6c4600121349e5"
+  },
+  "generated_at": "2026-08-06T20:00:00+00:00",
+  "git_revision": "public-home-assistant-release"
+}

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Powercast BLE Gateway</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel-2: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-2: #22c55e;
+      --danger: #ef4444;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 420px) 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--panel-2);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    .main {
+      padding: 20px;
+      display: grid;
+      gap: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    h1, h2, h3 { margin: 0 0 12px 0; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .stack { display: grid; gap: 12px; }
+    .row { display: grid; gap: 8px; }
+    .grid-2 { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    input, textarea, select, button {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    button {
+      cursor: pointer;
+      background: #172554;
+      border-color: #1d4ed8;
+    }
+    button.secondary { background: #0b1220; }
+    button.good { background: #14532d; border-color: #16a34a; }
+    button.danger { background: #450a0a; border-color: #dc2626; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions button { width: auto; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    code {
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      color: #bfdbfe;
+    }
+    .status {
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar stack">
+      <div>
+        <h1>Powercast BLE</h1>
+        <div class="muted">Home Assistant add-on starter for direct BLE scanning and local tag adoption.</div>
+      </div>
+      <div class="card stack">
+        <h2>Scanner</h2>
+        <div id="scannerPill" class="pill">Loading...</div>
+        <div id="scannerSource" class="muted">Checking scanner source...</div>
+        <div class="actions">
+          <button class="good" onclick="scannerAction('start')">Start</button>
+          <button onclick="scannerAction('restart')">Restart</button>
+          <button class="danger" onclick="scannerAction('stop')">Stop</button>
+        </div>
+      </div>
+      <div class="card stack">
+        <h2>Home Assistant Bridge</h2>
+        <div id="bridgePill" class="pill">Loading...</div>
+        <div id="bridgeText" class="muted">Checking local decode and MQTT Discovery...</div>
+      </div>
+    </aside>
+    <main class="main">
+      <section class="card stack">
+        <div>
+          <h2>BLE Scanner Settings</h2>
+          <div class="muted">These settings generate the scanner YAML written to the add-on data folder.</div>
+        </div>
+        <div class="grid-2">
+          <label class="row">Gateway MAC <input id="gateway_mac"></label>
+          <label class="row">MQTT Host <input id="mqtt_host"></label>
+          <label class="row">MQTT Port <input id="mqtt_port" type="number"></label>
+          <label class="row">MQTT Client ID <input id="mqtt_client_id"></label>
+          <label class="row">MQTT Topic <input id="mqtt_topic"></label>
+          <label class="row">MQTT Subscribe Topic <input id="mqtt_subscribe_topic"></label>
+          <label class="row">HA Discovery Prefix <input id="ha_discovery_prefix"></label>
+          <label class="row">HA State Topic Base <input id="ha_state_topic_base"></label>
+          <label class="row">Scanning Mode
+            <select id="scanning_mode">
+              <option value="active">active</option>
+              <option value="passive">passive</option>
+            </select>
+          </label>
+          <label class="row">Publish Interval Seconds <input id="publish_interval_seconds" type="number"></label>
+          <label class="row">Allowed Names (comma-separated) <input id="name_allowlist"></label>
+        </div>
+        <label class="row"><span>Start scanner on add-on boot</span><select id="start_scanner_on_boot"><option value="true">true</option><option value="false">false</option></select></label>
+        <div class="actions">
+          <button onclick="saveOptions()">Save Settings</button>
+        </div>
+      </section>
+
+      <section class="card stack">
+        <div>
+          <h2>Seen Tags</h2>
+          <div class="muted">Tags observed from approved BLE names. Select Adopt to prefill the secure local registry.</div>
+        </div>
+        <div style="overflow:auto"><table><thead><tr><th>BLE MAC</th><th>Name</th><th>Last Seen</th><th>RSSI</th><th>Gateway</th><th>Type Hint</th><th>Status</th><th></th></tr></thead><tbody id="seenTagsBody"></tbody></table></div>
+      </section>
+      <section class="card stack" id="adoptTagPanel">
+        <div>
+          <h2>Managed Tags</h2>
+          <div class="muted">Adopt tags from the Seen Tags list above. This list shows the tags managed by this Home Assistant bridge.</div>
+        </div>
+        <div id="adoptEditor" hidden>
+          <div class="muted">Complete the tag details to adopt the selected device.</div>
+        <div class="grid-2">
+          <label class="row">BLE MAC <input id="tag_ble_mac" placeholder="AABBCCDDEEFF"></label>
+          <label class="row">Display Name <input id="tag_display_name"></label>
+          <label class="row">Location <input id="tag_location"></label>
+          <label class="row">Sensor Type <input id="tag_sensor_type" list="sensor_type_options" placeholder="0001 or temperature_humidity"></label>
+          <label class="row">Encryption Key (required for encrypted tags) <input id="tag_key_hex" placeholder="32 hex chars"></label>
+          <label class="row">Stationary
+            <select id="tag_is_stationary">
+              <option value="false">false</option>
+              <option value="true">true</option>
+            </select>
+          </label>
+        </div>
+        <datalist id="sensor_type_options"></datalist>
+        <label class="row">Notes <textarea id="tag_notes"></textarea></label>
+        <div class="actions">
+          <button class="good" onclick="saveTag()">Adopt Tag</button>
+          <button onclick="cancelAdoption()">Cancel</button>
+        </div>
+        </div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>BLE MAC</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Claimed</th>
+                <th>Key</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tagsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card stack">
+        <h2>Status</h2>
+        <div id="statusText" class="status">Loading...</div>
+      </section>
+    </main>
+  </div>
+  <script>
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      });
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!response.ok) throw new Error(data.error || response.statusText);
+      return data;
+    }
+
+    function setStatus(message) {
+      document.getElementById("statusText").textContent = message;
+    }
+
+    function fillOptions(options) {
+      for (const key of ["gateway_mac","mqtt_host","mqtt_port","mqtt_topic","mqtt_client_id","mqtt_subscribe_topic","ha_discovery_prefix","ha_state_topic_base","scanning_mode","publish_interval_seconds"]) {
+        const el = document.getElementById(key);
+        if (el) el.value = options[key] ?? "";
+      }
+      document.getElementById("name_allowlist").value = (options.name_allowlist || []).join(", ");
+      document.getElementById("start_scanner_on_boot").value = String(Boolean(options.start_scanner_on_boot));
+    }
+
+    function renderTags(tags) {
+      const body = document.getElementById("tagsBody");
+      body.innerHTML = "";
+      for (const row of tags) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><code>${row.ble_mac}</code></td>
+          <td>${row.display_name || ""}</td>
+          <td>${row.location || ""}</td>
+          <td>${row.sensor_type || ""}</td>
+          <td>${row.claimed ? "yes" : "no"}</td>
+          <td>${row.has_key ? "present" : ""}</td>
+          <td><button class="danger" onclick="deleteTag('${row.ble_mac}')">Remove</button></td>
+        `;
+        body.appendChild(tr);
+      }
+    }
+
+    function formatSeenTime(value) {
+      if (value === null || value === undefined || value === "") return "";
+      const numeric = Number(value);
+      const date = Number.isFinite(numeric) ? new Date(numeric < 100000000000 ? numeric * 1000 : numeric) : new Date(value);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+    }
+
+    function renderSeenTags(tags) {
+      const body = document.getElementById("seenTagsBody");
+      body.innerHTML = "";
+      for (const row of tags || []) {
+        const tr = document.createElement("tr");
+        for (const value of [row.ble_mac, row.ble_name, formatSeenTime(row.last_seen), row.last_rssi, row.last_gateway_mac, row.sensor_type_hint, row.adopted ? "adopted" : "unclaimed"]) {
+          const td = document.createElement("td"); td.textContent = value ?? ""; tr.appendChild(td);
+        }
+        const action = document.createElement("td");
+        if (row.adopted) action.textContent = "Managed";
+        else { const button = document.createElement("button"); button.className = "good"; button.textContent = "Adopt"; button.addEventListener("click", () => adoptSeenTag(row)); action.appendChild(button); }
+        tr.appendChild(action); body.appendChild(tr);
+      }
+    }
+
+    function adoptSeenTag(row) {
+      document.getElementById("tag_ble_mac").value = row.ble_mac || "";
+      document.getElementById("tag_sensor_type").value = row.sensor_type_hint || (row.ble_name === "BLET" ? "0000" : "");
+      document.getElementById("tag_display_name").value = "";
+      document.getElementById("tag_location").value = "";
+      document.getElementById("tag_key_hex").value = "";
+      document.getElementById("tag_notes").value = "";
+      document.getElementById("adoptEditor").hidden = false;
+      document.getElementById("adoptTagPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("tag_display_name").focus();
+    }
+
+    function cancelAdoption() {
+      document.getElementById("adoptEditor").hidden = true;
+      document.getElementById("tag_key_hex").value = "";
+    }
+
+    function renderSensorTypes(sensorTypes) {
+      const options = document.getElementById("sensor_type_options");
+      options.innerHTML = "";
+      for (const sensorType of sensorTypes || []) {
+        const option = document.createElement("option");
+        const id = sensorType.custom_device_id || "";
+        option.value = id;
+        option.label = `${sensorType.display_name || sensorType.sensor_type || "Unknown"} (${sensorType.sensor_type || ""})`;
+        options.appendChild(option);
+      }
+    }
+
+    function renderScanner(scanner) {
+      const pill = document.getElementById("scannerPill");
+      pill.textContent = scanner.running ? `Running (PID ${scanner.pid})` : "Stopped";
+      pill.style.borderColor = scanner.running ? "#16a34a" : "#ef4444";
+      const source = scanner.source || {};
+      const sourceLabel = source.verified
+        ? `Source: ${source.canonical_source}${source.git_revision ? ` (${source.git_revision.slice(0, 8)})` : ""}`
+        : "Source: unable to verify canonical hub package";
+      document.getElementById("scannerSource").textContent = sourceLabel;
+    }
+
+    function renderBridge(bridge) {
+      const pill = document.getElementById("bridgePill");
+      const connected = Boolean(bridge && bridge.connected);
+      pill.textContent = connected ? "Connected" : "Disconnected";
+      pill.style.borderColor = connected ? "#16a34a" : "#ef4444";
+      document.getElementById("bridgeText").textContent = bridge
+        ? `Packets: ${bridge.packets_seen || 0}; decoded: ${bridge.decoded || 0}; ignored: ${bridge.ignored || 0}; entities: ${bridge.published_entities || 0}`
+        : "Bridge is unavailable.";
+    }
+
+    async function refreshSeenTags() {
+      try {
+        const seen = await api("/api/seen-tags");
+        renderSeenTags(seen.items);
+      } catch (error) {
+        console.debug("Unable to refresh seen tags", error);
+      }
+    }
+
+    async function refresh() {
+      try {
+        const [status, seen] = await Promise.all([api("/api/status"), api("/api/seen-tags")]);
+        fillOptions(status.options);
+        renderSeenTags(seen.items);
+        renderTags(status.adopted_tags);
+        renderSensorTypes(status.sensor_types);
+        renderScanner(status.scanner);
+        renderBridge(status.bridge);
+        setStatus(`Scanner: ${status.scanner.running ? "running" : "stopped"}; bridge: ${status.bridge && status.bridge.connected ? "connected" : "disconnected"}`);
+      } catch (error) {
+        setStatus(String(error));
+      }
+    }
+
+    async function saveOptions() {
+      try {
+        const payload = {
+          gateway_mac: document.getElementById("gateway_mac").value.trim(),
+          mqtt_host: document.getElementById("mqtt_host").value.trim(),
+          mqtt_port: Number(document.getElementById("mqtt_port").value || 1883),
+          mqtt_topic: document.getElementById("mqtt_topic").value.trim(),
+          mqtt_client_id: document.getElementById("mqtt_client_id").value.trim(),
+          mqtt_subscribe_topic: document.getElementById("mqtt_subscribe_topic").value.trim(),
+          ha_discovery_prefix: document.getElementById("ha_discovery_prefix").value.trim(),
+          ha_state_topic_base: document.getElementById("ha_state_topic_base").value.trim(),
+          scanning_mode: document.getElementById("scanning_mode").value,
+          publish_interval_seconds: Number(document.getElementById("publish_interval_seconds").value || 0),
+          name_allowlist: document.getElementById("name_allowlist").value.split(",").map((item) => item.trim()).filter(Boolean),
+          start_scanner_on_boot: document.getElementById("start_scanner_on_boot").value === "true",
+        };
+        await api("/api/options", { method: "POST", body: JSON.stringify(payload) });
+        await refresh();
+      } catch (error) {
+        setStatus(String(error));
+      }
+    }
+
+    async function saveTag() {
+      try {
+        const payload = {
+          ble_mac: document.getElementById("tag_ble_mac").value.trim(),
+          display_name: document.getElementById("tag_display_name").value.trim(),
+          location: document.getElementById("tag_location").value.trim(),
+          sensor_type: document.getElementById("tag_sensor_type").value.trim(),
+          key_hex: document.getElementById("tag_key_hex").value.trim(),
+          is_stationary: document.getElementById("tag_is_stationary").value === "true",
+          notes: document.getElementById("tag_notes").value.trim(),
+          claimed: true,
+        };
+        await api("/api/tags", { method: "POST", body: JSON.stringify(payload) });
+        cancelAdoption();
+        await refresh();
+      } catch (error) {
+        setStatus(String(error));
+      }
+    }
+
+    async function deleteTag(bleMac) {
+      try {
+        await api(`/api/tags/${bleMac}`, { method: "DELETE" });
+        await refresh();
+      } catch (error) {
+        setStatus(String(error));
+      }
+    }
+
+    async function scannerAction(action) {
+      try {
+        await api("/api/scanner", { method: "POST", body: JSON.stringify({ action }) });
+        await refresh();
+      } catch (error) {
+        setStatus(String(error));
+      }
+    }
+
+    refresh();
+    setInterval(refreshSeenTags, 5000);
+  </script>
+</body>
+</html>

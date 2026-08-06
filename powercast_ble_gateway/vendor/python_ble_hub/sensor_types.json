@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "description": "Canonical Powercast sensor-type registry. Production snapshot refreshed 2026-07-20.",
+  "types": [
+    {
+      "custom_device_id": "0000",
+      "sensor_type": "temperature_humidity",
+      "display_name": "Legacy BLET temperature and humidity",
+      "decoder_function": "legacy_ble_beacon",
+      "encryption_type": "none",
+      "has_temperature": true,
+      "has_humidity": true,
+      "is_location_only": false,
+      "notes": "Legacy unencrypted BLET manufacturer payload. Temperature and humidity are decoded by the established legacy beacon decoder.",
+      "characteristics": [
+        {
+          "characteristic_key": "humidity_percent",
+          "display_name": "Humidity",
+          "value_type": "number",
+          "unit": "%",
+          "byte_offset": 13,
+          "byte_length": 2,
+          "byte_order": "little",
+          "is_signed": false,
+          "crc_offset": 15,
+          "crc_length": 1,
+          "crc_algorithm": "legacy_crc8",
+          "formula": "100 * (raw / 65535)",
+          "notes": "Offset is relative to the full legacy BLE advertisement packet."
+        },
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 10,
+          "byte_length": 2,
+          "byte_order": "little",
+          "is_signed": false,
+          "crc_offset": 12,
+          "crc_length": 1,
+          "crc_algorithm": "legacy_crc8",
+          "formula": "-49 + 315 * (raw / 65535)",
+          "notes": "Offset is relative to the full legacy BLE advertisement packet."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0001",
+      "sensor_type": "encrypted_temperature_humidity",
+      "display_name": "Encrypted temperature and humidity",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": true,
+      "has_humidity": true,
+      "is_location_only": false,
+      "notes": "PCBLE encrypted temperature/humidity payload. The first two decrypted bytes are device ID 0001, followed by six sensor bytes.",
+      "characteristics": [
+        {
+          "characteristic_key": "humidity_percent",
+          "display_name": "Humidity",
+          "value_type": "number",
+          "unit": "%",
+          "byte_offset": 3,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": 5,
+          "crc_length": 1,
+          "crc_algorithm": "sensirion_crc8",
+          "formula": "100 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        },
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": 2,
+          "crc_length": 1,
+          "crc_algorithm": "sensirion_crc8",
+          "formula": "-49 + 315 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0002",
+      "sensor_type": "heartbeat_location",
+      "display_name": "Heartbeat / asset tracking",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": false,
+      "has_humidity": false,
+      "is_location_only": true,
+      "notes": "PCBLE heartbeat-only payload used for asset and location tracking.",
+      "characteristics": [
+        {
+          "characteristic_key": "heartbeat",
+          "display_name": "Heartbeat",
+          "value_type": "boolean",
+          "unit": null,
+          "byte_offset": null,
+          "byte_length": null,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": null,
+          "notes": "Presence/asset-tracking heartbeat without a decoded measurement payload."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0005",
+      "sensor_type": "encrypted_temu_sht40",
+      "display_name": "Encrypted Temu SHT40",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": true,
+      "has_humidity": true,
+      "is_location_only": false,
+      "notes": "PCBLE encrypted Temu SHT40 temperature/humidity payload.",
+      "characteristics": [
+        {
+          "characteristic_key": "humidity_percent",
+          "display_name": "Humidity",
+          "value_type": "number",
+          "unit": "%",
+          "byte_offset": 3,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": "-6 + 125 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        },
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": 2,
+          "crc_length": 1,
+          "crc_algorithm": "sensirion_crc8",
+          "formula": "-49 + 315 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0006",
+      "sensor_type": "encrypted_thermister",
+      "display_name": "Encrypted Temu Therm",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": true,
+      "has_humidity": false,
+      "is_location_only": false,
+      "notes": "PCBLE encrypted thermistor payload. Temperature ADC is payload bytes 0-1 and VCC is byte 2.",
+      "characteristics": [
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "little",
+          "is_signed": false,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": "((1 / ((1 / 298.15) + (ln(((39200 * (raw * 0.00078125)) / ((payload_uint(2, 1) * 0.03125) - (raw * 0.00078125))) / 10000) / 3380))) - 273.15) * 1.8 + 32",
+          "notes": "Thermistor ADC conversion. Formula reads VCC from payload byte 2."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0007",
+      "sensor_type": "encrypted_thermister_no_boost",
+      "display_name": "Encrypted Temu NoBoost",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": true,
+      "has_humidity": false,
+      "is_location_only": false,
+      "notes": "PCBLE encrypted thermistor payload. Temperature ADC is payload bytes 0-1 and VCC is byte 2.",
+      "characteristics": [
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "little",
+          "is_signed": false,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": "((1 / ((1 / 298.15) + (ln(((39200 * (raw * 0.00078125)) / ((payload_uint(2, 1) * 0.03125) - (raw * 0.00078125))) / 10000) / 3380))) - 273.15) * 1.8 + 32",
+          "notes": "Thermistor ADC conversion. Formula reads VCC from payload byte 2."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "0008",
+      "sensor_type": "encrypted_ynvisible",
+      "display_name": "Encrypted Ynvisible",
+      "decoder_function": "PCBLE_registry_decoder",
+      "encryption_type": "aes_128_eax",
+      "has_temperature": true,
+      "has_humidity": true,
+      "is_location_only": false,
+      "notes": "PCBLE encrypted Ynvisible temperature/humidity payload.",
+      "characteristics": [
+        {
+          "characteristic_key": "humidity_percent",
+          "display_name": "Humidity",
+          "value_type": "number",
+          "unit": "%",
+          "byte_offset": 3,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": 5,
+          "crc_length": 1,
+          "crc_algorithm": "sensirion_crc8",
+          "formula": "100 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        },
+        {
+          "characteristic_key": "temperature_f",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degF",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": 2,
+          "crc_length": 1,
+          "crc_algorithm": "sensirion_crc8",
+          "formula": "-49 + 315 * (raw / 65535)",
+          "notes": "Relative to the decrypted sensor payload after the two-byte device ID."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "000A",
+      "sensor_type": "stble_aes_ccm_boolean",
+      "display_name": "STBLE encrypted boolean",
+      "decoder_function": "STBLE_registry_decoder",
+      "encryption_type": "aes_ccm",
+      "has_temperature": false,
+      "has_humidity": false,
+      "is_location_only": false,
+      "notes": "STBLE encrypted boolean beacon. Preferred local name is STBLE; older captures may use PCBLE. Service ID is 0x000A. The Powercast manufacturer payload after D3 02 contains 8-byte salt, 1-byte AES-CCM ciphertext, and 4-byte authentication tag. AES-CCM uses nonce salt || five zero bytes and authenticated data D3 02. Per-tag keys belong only in the secured adoption/key store, never this registry.",
+      "characteristics": [
+        {
+          "characteristic_key": "boolean",
+          "display_name": "Boolean",
+          "value_type": "boolean",
+          "unit": null,
+          "byte_offset": 0,
+          "byte_length": 1,
+          "byte_order": "big",
+          "is_signed": false,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": null,
+          "notes": "One decrypted state byte. 0 is false and any nonzero value is true after AES-CCM authentication succeeds."
+        }
+      ]
+    },
+    {
+      "custom_device_id": "000B",
+      "sensor_type": "lora_sht40_temperature_humidity",
+      "display_name": "LoRa SHT40 temperature and humidity",
+      "decoder_function": "LoRa_registry_decoder",
+      "encryption_type": "none",
+      "has_temperature": true,
+      "has_humidity": true,
+      "is_location_only": false,
+      "notes": "LoRaTag.X v1 frame: signed 16-bit big-endian temperature in centi-degrees C followed by signed 16-bit big-endian relative humidity in centi-percent. Current firmware does not transmit a tag identifier; add one before using multiple tags.",
+      "characteristics": [
+        {
+          "characteristic_key": "temperature_c",
+          "display_name": "Temperature",
+          "value_type": "number",
+          "unit": "degC",
+          "byte_offset": 0,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": true,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": "raw / 100",
+          "notes": "Signed 16-bit big-endian temperature in centi-degrees C from the LoRaTag.X v1 radio frame."
+        },
+        {
+          "characteristic_key": "humidity_percent",
+          "display_name": "Humidity",
+          "value_type": "number",
+          "unit": "%",
+          "byte_offset": 2,
+          "byte_length": 2,
+          "byte_order": "big",
+          "is_signed": true,
+          "crc_offset": null,
+          "crc_length": null,
+          "crc_algorithm": "none",
+          "formula": "raw / 100",
+          "notes": "Signed 16-bit big-endian relative humidity in centi-percent from the LoRaTag.X v1 radio frame."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+bleak==0.22.3
+paho-mqtt==2.1.0
+PyYAML==6.0.2
+psycopg[binary]==3.2.3
+pycryptodome==3.21.0

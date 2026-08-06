@@ -1,0 +1,54 @@
+name: "Powercast BLE Gateway"
+version: "0.3.0"
+slug: "powercast_ble_gateway"
+description: "BLE scanner and adoption registry for direct Home Assistant deployments."
+url: "https://github.com/hshober-source/PowercastHA"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+init: false
+ingress: true
+ingress_port: 8091
+panel_icon: "mdi:bluetooth-connect"
+panel_title: "Powercast BLE"
+host_network: true
+host_dbus: true
+startup: services
+boot: auto
+ports:
+  8091/tcp: null
+options:
+  gateway_mac: ""
+  mqtt_host: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+  mqtt_topic: "/sensors/observations/{gateway_mac}"
+  mqtt_client_id: "ha-powercast-ble-hub"
+  mqtt_subscribe_topic: "/sensors/observations/#"
+  ha_discovery_prefix: "homeassistant"
+  ha_state_topic_base: "blet/homeassistant/ble"
+  scanning_mode: "active"
+  publish_interval_seconds: 0
+  name_allowlist:
+    - "BLET"
+    - "PCBLE"
+    - "STBLE"
+  start_scanner_on_boot: true
+schema:
+  gateway_mac: "str?"
+  mqtt_host: "str"
+  mqtt_port: "port"
+  mqtt_username: "str?"
+  mqtt_password: "str?"
+  mqtt_topic: "str"
+  mqtt_client_id: "str"
+  mqtt_subscribe_topic: "str"
+  ha_discovery_prefix: "str"
+  ha_state_topic_base: "str"
+  scanning_mode: "list(active|passive)"
+  publish_interval_seconds: "int(0,3600)"
+  name_allowlist:
+    - "str"
+  start_scanner_on_boot: "bool"

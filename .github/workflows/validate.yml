@@ -1,0 +1,19 @@
+name: Validate Home Assistant App
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify sensor type registry
+        run: python scripts/check_registry.py
+      - name: Compile application modules
+        run: python -m py_compile powercast_ble_gateway/addon_runtime.py powercast_ble_gateway/ha_bridge.py powercast_ble_gateway/vendor/hub_ingester.py powercast_ble_gateway/vendor/python_ble_hub/ble_mqtt_hub.py
