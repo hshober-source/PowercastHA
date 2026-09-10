@@ -24,9 +24,9 @@
           "is_signed": false,
           "crc_offset": 15,
           "crc_length": 1,
-          "crc_algorithm": "legacy_crc8",
+          "crc_algorithm": "sensirion_crc8",
           "formula": "100 * (raw / 65535)",
-          "notes": "Offset is relative to the full legacy BLE advertisement packet."
+          "notes": "Offset is relative to the full legacy BLE advertisement packet. The following check byte is Sensirion CRC-8."
         },
         {
           "characteristic_key": "temperature_f",
@@ -39,9 +39,9 @@
           "is_signed": false,
           "crc_offset": 12,
           "crc_length": 1,
-          "crc_algorithm": "legacy_crc8",
+          "crc_algorithm": "sensirion_crc8",
           "formula": "-49 + 315 * (raw / 65535)",
-          "notes": "Offset is relative to the full legacy BLE advertisement packet."
+          "notes": "Offset is relative to the full legacy BLE advertisement packet. The following check byte is Sensirion CRC-8."
         }
       ]
     },
@@ -287,7 +287,7 @@
       ]
     },
     {
-      "custom_device_id": "000B",
+      "custom_device_id": "000E",
       "sensor_type": "lora_sht40_temperature_humidity",
       "display_name": "LoRa SHT40 temperature and humidity",
       "decoder_function": "LoRa_registry_decoder",

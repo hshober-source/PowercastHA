@@ -1232,12 +1232,12 @@ def decode_powercast_blet(raw_data: Any) -> DecodedBeacon | None:
         offset=10,
         beacon_type="powercast_blet",
         sensor_type="temperature_humidity",
-        decoder_version="powercast_blet_v1",
+        decoder_version="powercast_blet_v2",
         decoded_extra=None,
-        # The legacy BLET protocol supplies CRC bytes but does not use the
-        # Sensirion CRC scheme used by newer encrypted SHT payloads.
-        temperature_crc_algorithm="legacy_crc8",
-        humidity_crc_algorithm="legacy_crc8",
+        # Legacy BLET carries a Sensirion CRC-8 check byte after each unsigned
+        # 16-bit sensor word: temperature[2] and humidity[2].
+        temperature_crc_algorithm="sensirion_crc8",
+        humidity_crc_algorithm="sensirion_crc8",
     )
 
 

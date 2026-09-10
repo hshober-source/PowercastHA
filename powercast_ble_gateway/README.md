@@ -13,9 +13,11 @@ Assistant's local `core-mosquitto` app.
 - Active or passive BLE scanning for `BLET`, `PCBLE`, and `STBLE` advertisements.
 - A local Seen Tags and Adopted Tags workflow.
 - Local authenticated decryption for adopted encrypted tags.
+- Sensirion CRC-8 validation for each legacy BLET temperature and humidity word;
+  failed fields are not sent to Home Assistant.
 - Home Assistant MQTT Discovery entities for valid measurements and RSSI.
 - A bundled key-free sensor type registry, including current device IDs through
-  `000B`.
+  `000E`.
 
 ## Security Model
 
